@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UniWork - File Upload</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/src/public/styles.css">
+    <style>
+        #metaMaskAvatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer; /* Pointer on hover */
+            display: none; /* Initially hidden */
+        }
+
+        .wallet-info {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end; /* Align to right */
+            position: relative; /* Position for dropdown */
+        }
+
+        .dropdown-menu {
+            min-width: 200px; /* Set minimum width for dropdown */
+        }
+
+        .progress {
+            height: 20px;
+            margin-top: 10px;
+        }
+
+        #progressBar {
+            width: 0%;
+            height: 100%;
+            background-color: #4caf50;
+        }
+
+        .token-container {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="#">UniWork</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item active">
+                    <a class="nav-link" href="#">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">About</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Contact</a>
+                </li>
+            </ul>
+        </div>
+        <!-- MetaMask Avatar with Dropdown -->
+        <div class="wallet-info ml-3 dropdown">
+            <img id="metaMaskAvatar" src="" alt="MetaMask Avatar" data-toggle="dropdown" />
+            <div class="dropdown-menu dropdown-menu-right">
+                <h6 class="dropdown-header" id="accountName">Account: <span id="walletAddress"></span></h6>
+                <button id="disconnectWalletButton" class="btn btn-danger btn-block" style="display: none;" onclick="disconnectWallet()">Disconnect Wallet</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        <h1 class="text-center">Upload Your Work</h1>
+
+        <!-- Wallet Info -->
+        <div class="wallet-info">
+            <button id="connectWalletButton" class="btn btn-success btn-block">Connect Wallet</button>
+        </div>
+
+        <form id="upload-form" class="mt-3">
+            <div class="form-group">
+                <input type="text" class="form-control" name="ownerName" placeholder="Your Name" required />
+            </div>
+            <div class="form-group">
+                <input type="file" class="form-control-file" name="work" accept="image/*" required />
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Upload</button>
+        </form>
+
+        <div id="uploadProgress" class="progress">
+            <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar"></div>
+        </div>
+
+        <h2 class="mt-5">Retrieve Your Uploaded Work</h2>
+        <div class="form-group">
+            <input type="text" id="tokenIdInput" class="form-control" placeholder="Enter Token ID" />
+        </div>
+        <button id="retrieveButton" class="btn btn-secondary">Retrieve Work</button>
+
+        <div id="image-container" class="mt-4">
+            <h3>Uploaded Image:</h3>
+            <img id="uploadedImage" src="" alt="Uploaded Work" class="img-fluid" />
+        </div>
+
+        <div class="token-container" id="tokenContainer" style="display:none;">
+            <h3>Your Token ID:</h3>
+            <span id="tokenId"></span>
+            <button id="copyButton" class="btn btn-outline-primary btn-sm">Copy Token ID</button>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="errorToast" style="position: absolute; top: 20px; right: 20px; z-index: 1050;" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <strong class="mr-auto text-danger">Error</strong>
+            <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <div class="toast-body">
+            Please connect your MetaMask wallet before uploading.
+        </div>
+    </div>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.6.1/dist/web3.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="script.js"></script>
+
+    <script>
+        // JavaScript to manage wallet connection and dropdown
+        let connectedAccount = ''; // Variable to hold the connected account name
+
+        document.getElementById('connectWalletButton').addEventListener('click', async () => {
+            if (typeof window.ethereum !== 'undefined') {
+                // Request account access if needed
+                await window.ethereum.request({ method: 'eth_requestAccounts' });
+                
+                // Get the user's accounts
+                const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                if (accounts.length > 0) {
+                    connectedAccount = accounts[0]; // Get the first account
+                    document.getElementById('walletAddress').innerText = connectedAccount;
+
+                    // Update the avatar (assuming you have a default image, as MetaMask does not provide one)
+                    document.getElementById('metaMaskAvatar').src = 'https://example.com/default-avatar.png'; // Replace with your default avatar URL
+                    document.getElementById('metaMaskAvatar').style.display = 'block';
+                    document.getElementById('disconnectWalletButton').style.display = 'block';
+                }
+            } else {
+                alert('Please install MetaMask!');
+            }
+        });
+
+        document.getElementById('upload-form').addEventListener('submit', function (event) {
+            if (!connectedAccount) {
+                event.preventDefault(); // Prevent form submission
+                showErrorToast(); // Show error toast
+            }
+            // Add your upload logic here if wallet is connected
+        });
+
+        function disconnectWallet() {
+            connectedAccount = '';
+            document.getElementById('walletAddress').innerText = '';
+            document.getElementById('disconnectWalletButton').style.display = 'none';
+            document.getElementById('metaMaskAvatar').style.display = 'none';
+        }
+
+        function showErrorToast() {
+            $('#errorToast').toast({
+                delay: 3000 // Auto-hide after 3 seconds
+            });
+            $('#errorToast').toast('show');
+        }
+    </script>
+</body>
+</html>

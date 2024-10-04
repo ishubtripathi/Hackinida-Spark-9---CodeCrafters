@@ -1,0 +1,28 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+}
+#uploadProgress {
+    margin-top: 10px;
+    width: 100%;
+    background-color: #f3f3f3;
+    border: 1px solid #ccc;
+    display: none; /* Initially hidden */
+}
+#progressBar {
+    height: 20px;
+    width: 0;
+    background-color: #4caf50;
+}
+#image-container {
+    margin-top: 20px;
+    border: 1px solid #ccc;
+    padding: 10px;
+    display: none;
+}
+.token-container {
+    margin-top: 10px;
+}
+.wallet-info {
+    margin-top: 20px;
+}
