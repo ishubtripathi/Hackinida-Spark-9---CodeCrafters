@@ -1,6 +1,5 @@
 # Hackinida-Spark-9---CodeCrafters
 
-# UniWork Backend
 
 UniWork is a platform that allows users to upload their work in formats such as PNG, JPEG, PDF, and GIF. The work is stored in a decentralized system using IPFS, and each uploaded file is minted as an NFT (Non-Fungible Token) on the Ethereum blockchain. Users can search their work by NFT token ID, and the platform displays owner details and other profile information.
 
